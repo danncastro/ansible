@@ -1,0 +1,13 @@
+- name: Backup Full MSSQL / Upload Bucket S3
+  hosts: all
+  tasks:
+
+  - name: Backup Full DB
+    win_shell: Backup-SqlDatabase -ServerInstance "." -Database "{{ database_name }}" -BackupFile "{{ destination_backup }}\{{ backup_name }}-{{ansible_date_time.iso8601_basic_short}}.bak" -CompressionOption On
+
+  - name: Sincronização Backup S3
+    win_shell: | 
+        $Env:AWS_ACCESS_KEY_ID= "{{ access_key }}"
+        $Env:AWS_SECRET_ACCESS_KEY= "{{ secret_key }}"
+        $Env:AWS_DEFAULT_REGION="sa-east-1"
+        aws s3 sync "{{ destination_backup }}" s3://"{{ bucket_s3 }}"

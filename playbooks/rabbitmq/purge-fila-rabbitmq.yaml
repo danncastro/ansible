@@ -1,0 +1,10 @@
+---
+- name: "Purge"
+  hosts: all
+  ignore_errors: yes
+  tasks:
+
+    - name: "Purge na fila"
+      shell:
+        cmd: rabbitmqctl purge_queue nome_fila -p {{ item.name }}
+      loop: "{{ cliente }}"

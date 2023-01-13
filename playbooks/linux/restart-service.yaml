@@ -1,0 +1,10 @@
+- name: "Restart service"
+  hosts: all
+  ignore_errors: yes
+  tasks:
+
+    - name: "restart service"
+      win_shell: taskkill /IM "nome_servico" /F
+
+    - name: "start service"
+      win_shell: Start-Service x

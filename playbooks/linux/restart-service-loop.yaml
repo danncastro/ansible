@@ -1,0 +1,10 @@
+- name: "Restart service"
+  hosts: all
+  #ignore_errors: yes
+  tasks:
+
+    - name: "Restart service"
+      win_service:
+        name: "{{ item.name }}"
+        state: restarted
+      loop: "{{ cliente }}"

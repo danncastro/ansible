@@ -1,0 +1,23 @@
+---
+- name: "Deleta arquivos de Logs"
+  hosts: all
+  tasks:
+
+    - name: "Deletar arquivos"
+      win_shell: Get-ChildItem "F:\caminho\{{ item.name }}\caminho" -Recurse -File | Where CreationTime -lt  (Get-Date).AddDays(-3)  | Remove-Item -Force
+      loop: "{{ cliente }}"
+
+- name: "Deleta arquivos de Logs"
+  hosts: all
+  tasks:
+
+    - name: "Deletar arquivos"
+      win_shell: Get-ChildItem "F:\caminho\{{ item.name }}\log" -Recurse -File | Where CreationTime -lt  (Get-Date).AddDays(-3)  | Remove-Item -Force
+      loop: "{{ cliente }}"
+
+- name: "Deleta arquivos de Logs servico y"
+  hosts: all
+  tasks:
+
+    - name: "Deletar arquivos servico x"
+      win_shell: Get-ChildItem "C:\caminho" -Recurse -File | Where CreationTime -lt  (Get-Date).AddDays(-3)  | Remove-Item -Force

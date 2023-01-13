@@ -1,0 +1,13 @@
+- name: Install Chocolatey / AWS CLI
+  hosts: all
+  tasks:
+
+  - name: Install Chocolatey
+    win_shell: Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+  - name: Install awscli
+    win_chocolatey:
+      name: awscli
+      version: '2.4.9'
+      source: https://community.chocolatey.org/api/v2/
+      state: present

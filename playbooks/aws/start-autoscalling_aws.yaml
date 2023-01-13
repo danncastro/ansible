@@ -1,0 +1,15 @@
+- name: Start Instance EC2 AWS - AutoScaling Group
+  hosts: all
+  tasks:
+
+  - name: Set capacity autoscaling group
+    shell:
+      cmd: |
+          export AWS_ACCESS_KEY_ID="{{ access_key }}" &&\
+          export AWS_SECRET_ACCESS_KEY="{{ secret_key }}" &&\
+          export AWS_DEFAULT_REGION="{{ region }}" &&\
+          aws autoscaling update-auto-scaling-group \
+          --auto-scaling-group-name "{{ name_autoscaling_group }}" \
+          --min-size "{{ minsize }}" \
+          --max-size "{{ maxsize }}" \
+          --desired-capacity "{{ desired }}"

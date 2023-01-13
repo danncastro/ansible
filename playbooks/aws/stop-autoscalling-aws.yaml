@@ -1,0 +1,15 @@
+- name: Stop Instance EC2 AWS - AutoScaling Group
+  hosts: all
+  tasks:
+
+  - name: Desired capacity autoscaling 0
+    shell:
+      cmd: |
+          export AWS_ACCESS_KEY_ID="{{ access_key }}" &&\
+          export AWS_SECRET_ACCESS_KEY="{{ secret_key }}" &&\
+          export AWS_DEFAULT_REGION="{{ region }}" &&\
+          aws autoscaling update-auto-scaling-group \
+          --auto-scaling-group-name "{{ name_autoscaling_group }}" \
+          --min-size 0 \
+          --max-size 0 \
+          --desired-capacity 0

@@ -1,0 +1,7 @@
+- name: Restart Agentes TMS
+  hosts: all
+  tasks:
+
+  - name: Restart Service Agente
+    shell:
+      cmd: service agente restart

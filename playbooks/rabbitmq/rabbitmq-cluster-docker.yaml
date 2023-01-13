@@ -1,0 +1,95 @@
+---
+- hosts: localhost
+  become: true
+
+  tasks:
+  - name: "Create a directory /docker/compose if it does not exist"
+    ansible.builtin.file:
+      path: /docker/compose
+      state: directory
+      mode: '0755'
+
+  - name: "Create a directory /docker/rabbitmq/etc if it does not exist"
+    ansible.builtin.file:
+      path: /docker/rabbitmq/etc
+      state: directory
+      mode: '0755'
+      
+    
+  - name: "Copy definitions.json with owner and permissions"
+    ansible.builtin.copy:
+      src: ../rabbitmq/definitions.json
+      dest: /docker/rabbitmq/etc
+      owner: root
+      group: root
+      mode: '0644'
+      
+  - name: "Copy rabbitmq.conf with owner and permissions"
+    ansible.builtin.copy:
+      src: ../rabbitmq/rabbitmq.conf
+      dest: /docker/rabbitmq/etc
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: "Copy docker-compose with owner and permissions"
+    ansible.builtin.copy:
+      src: ../rabbitmq/docker-compose.yaml
+      dest: /docker/compose/docker-compose.yaml
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: "Tear up compose existing services"
+    command:
+      "docker-compose up -d"
+    args:
+      chdir: /docker/compose
+
+#rabbitmq2
+  - name: "rabbitmqctl stop_app rabbitmq2"
+    become: true
+    shell: 
+      cmd: docker exec -i rabbitmq2 rabbitmqctl stop_app
+
+  - name: "docker rabbitmqctl rabbitmq2"
+    become: true
+    shell: 
+      cmd: docker exec -i rabbitmq2 rabbitmqctl join_cluster rabbit@rabbitmq1 
+
+  - name: "rabbitmqctl start_app rabbitmq2"
+    become: true
+    shell: 
+      cmd: docker exec -i rabbitmq2 rabbitmqctl start_app
+
+#rabbitmq3
+  - name: "rabbitmqctl stop_app rabbitmq3"
+    become: true
+    shell: 
+      cmd: docker exec -i rabbitmq3 rabbitmqctl stop_app
+
+  - name: "docker rabbitmqctl rabbitmq3"
+    become: true
+    shell: 
+      cmd: docker exec -i rabbitmq3 rabbitmqctl join_cluster rabbit@rabbitmq1 
+
+  - name: "rabbitmqctl start_app rabbitmq3"
+    become: true
+    shell: 
+      cmd: docker exec -i rabbitmq3 rabbitmqctl start_app
+
+#rabbitmq4
+  - name: "rabbitmqctl stop_app rabbitmq4"
+    become: true
+    shell: 
+      cmd: docker exec -i rabbitmq4 rabbitmqctl stop_app
+
+  - name: "docker rabbitmqctl rabbitmq4"
+    become: true
+    shell: 
+      cmd: docker exec -i rabbitmq4 rabbitmqctl join_cluster rabbit@rabbitmq1 
+
+  - name: "rabbitmqctl start_app rabbitmq4"
+    become: true
+    shell: 
+      cmd: docker exec -i rabbitmq4 rabbitmqctl start_app

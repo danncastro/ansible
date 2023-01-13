@@ -1,0 +1,45 @@
+- name: Dump MariaDB / Upload Bucket backup.lincros.zabbix
+  hosts: all
+  tasks:
+
+  - name: Installing pymysql for dependency
+    pip:
+      name: pymysql
+      state: present
+  
+  - name: Database Dump File
+    mysql_db:
+      login_user: "{{ username }}"
+      login_password: "{{ password }}"
+      login_host: localhost
+      state: dump
+      name: zabbix
+      target: /backup/{{ansible_date_time.iso8601}}.sql.gz
+
+  - name: Install boto3 and botocore with pip3 module
+    pip:
+      name:
+      - boto
+      - boto3
+      - botocore==1.22.12
+
+  - name: Upload/Sync DB for S3
+    s3_sync:
+      aws_access_key: "{{ access_key }}"
+      aws_secret_key: "{{ secret_key }}"
+      region: sa-east-1
+      bucket: backup.lincros.zabbix
+      file_root: /backup/
+
+  - name: Copy script
+    copy:
+      src: /scripts/validacao_bkp.sh
+      dest: /tmp/validacao_bkp.sh
+
+  - name: Verification backup
+    shell:
+      cmd: /bin/bash /tmp/validacao_bkp.sh
+
+  - name: Delete backup more 7 days.
+    shell:
+      cmd: find /backup/ -mtime +6 -delete
