@@ -1,0 +1,23 @@
+---
+- name:  "Configuração do servidor de banco de dados"
+  hosts: database
+  user: vagrant
+  become: yes
+  vars_files:
+    - vars/main.yml
+  vars:
+    - dbname: "db01"
+    - dbusername: "root"
+    - dbpassword: "bugdev123"
+  tasks:
+    - name: "Configuração dos hosts ansible"
+      lineinfile:
+        line: "{{item}}"
+        path: /etc/hosts
+        with_items:
+          - 192.168.0.121 database
+          - 192.168.0.122 application
+  roles:
+    - roles
+    - role: geerlingguy.mysql
+

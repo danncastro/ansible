@@ -1,8 +1,0 @@
-- name: upgrade packege so
-  yum:
-    name: '*'
-    state: latest
-- name: git-client install
-  yum:
-    name: git
-    state: latest
