@@ -1,0 +1,12 @@
+---
+- name: ChangeFS
+  hosts: all !bad_hosts
+  become: yes
+  gather_facts: no
+  tasks:
+#     - name: Imutando o arquivo /etc/hosts
+#       shell: chattr -i /etc/hosts
+#     - name: Imutando o arquivo /etc/fstab
+#       shell: chattr -i /etc/fstab
+     - name: Listando o arquivo /etc/fstab
+       shell: lsattr /etc/fstab

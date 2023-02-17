@@ -1,0 +1,171 @@
+############# Atualizando ambiente ##################
+---
+- name: "Validando a comunicação"
+  hosts: master, nodes
+  gather_facts: no
+  become: yes
+  vars:
+    - rabbitmq: "rabbitmq-server"
+  tasks:
+    - name: "Atualizando lista de repositorios 1x"
+      yum:
+        name: "*"
+        state: latest
+
+    - name: "Removendo duplicidade do erlang-solutions"
+      yum:
+        name: "erlang-solutions-1.0-1.noarch"
+        state: absent
+      register: result_install
+
+    - name: "Removendo conflito de repos epel do /etc"
+      shell: rm -rf /etc/yum.repos.d/epel-testing.repo 
+
+    - name: "Removendo conflito de repos epel do /etc"
+      shell: rm -rf /etc/yum.repos.d/epel.repo
+
+############# Instalando Pré-requisitos ##################
+
+    - name: "Download pacote EPEL"
+      yum:
+        name: "epel-release"
+        state: latest
+      register: result_install
+
+    - name: "Download pacote yum-utils"
+      yum:
+        name: "yum-utils"
+        state: latest
+      register: result_install
+
+    - name: "Download pacote socat"
+      yum:
+        name: "socat"
+        state: latest
+      register: result_install
+
+    - name: "Download pacote logrotate"
+      yum:
+        name: "logrotate"
+        state: latest
+      register: result_install
+
+    - name: "Download pacote wget"
+      yum:
+        name: "wget"
+        state: latest
+      register: result_install
+
+############## Instalando erlang & dependencias ##################
+
+    - name: "Downlaod repositorio de instalação erlang"
+      ansible.builtin.get_url:
+        url: http://packages.erlang-solutions.com/erlang-solutions-1.0-1.noarch.rpm
+        dest: /tmp
+
+    - name: "Execução do script de repositorio do erlang"
+      shell: rpm -Uvh /tmp/erlang-solutions-1.0-1.noarch.rpm
+
+    - name: "Atualização dos repositorios"
+      shell: yum update
+
+    - name: "Instalação erlang 24"
+      yum:
+        name: "erlang"
+        state: latest
+      register: result_install
+
+############## Instalando rabbitmq-server & dependencias ##################
+
+    - name: "Downlaod repositorio de instalação Rabbitmq-server"
+      ansible.builtin.get_url:
+        url: https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh
+        dest: /tmp
+
+    - name: "Execução do script de repositorio do Rabbitmq-server"
+      shell: sh /tmp/script.rpm.sh
+
+    - name: "Chave de assinatura principal do RabbitMQ"
+      shell: rpm --import https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc
+
+    - name: "Repositório Erlang moderno"
+      shell: rpm --import https://packagecloud.io/rabbitmq/erlang/gpgkey
+
+    - name: "Repositório do servidor RabbitMQ"
+      shell: rpm --import https://packagecloud.io/rabbitmq/rabbitmq-server/gpgkey
+
+    - name: "Atualizando lista de repositorios 2x"
+      yum:
+        name: "*"
+        state: latest
+
+    - name: "Instalando {{ rabbitmq }}"
+      yum:
+        name: "{{ rabbitmq }}"
+        state: present
+      register: result_install
+
+############# Copiando os arquivos de configuração do rabbitmq ##################
+
+    - name: "Copiando o rabbitmq.conf para diretorio padrão"
+      ansible.builtin.copy:
+        src: rabbitmq.conf
+        dest: /etc/rabbitmq/
+        owner: root
+        group: rabbitmq
+
+    - name: "Copiando o definitions.json para diretorio padrão"
+      ansible.builtin.copy:
+        src: definitions.json
+        dest: /etc/rabbitmq/
+        owner: root
+        group: rabbitmq
+
+############# Startnado rabbitmq-server & dependencias ###################
+
+    - name: "Startando serviço {{ rabbitmq }}"
+      systemd:
+         name: "{{ rabbitmq }}"
+         state: started
+         enabled: yes
+      when: result_install is changed
+
+    - name: "Copiando o .erlang.cookie para habilitar o cluster"
+      shell: echo 'SZDLNEAWBRCNGKOCNBKD' > /var/lib/rabbitmq/.erlang.cookie
+
+    - name: "Restartando serviço {{ rabbitmq }}"
+      systemd:
+        name: "{{ rabbitmq }}"
+        state: restarted
+      when: result_install is changed
+
+############# Habilitando o gerenciamento WEB ##################
+
+    - name: "Habilitando Painel {{ rabbitmq }}"
+      rabbitmq_plugin:
+        names: rabbitmq_management
+        state: enabled
+
+############## Criação do cluster #########################
+- name: "Validando a comunicação nodes"
+  hosts: nodes !bad_hosts
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: "Stopando rabbitmq-server"
+      shell: rabbitmqctl stop_app
+
+    - name: "Resetando rabbitmq-server"
+      shell: rabbitmqctl reset
+
+    - name: "Adicionando node-cluster ao master"
+      shell: rabbitmqctl join_cluster rabbit@rabbitmq01
+
+    - name: "Startando rabbitmq-server"
+      shell: rabbitmqctl start_app
+
+# Precisa fechar conexão nas port :
+
+  # 4369
+  # 5672
+  # 22
