@@ -10,3 +10,6 @@
 #       shell: chattr -i /etc/fstab
      - name: Listando o arquivo /etc/fstab
        shell: lsattr /etc/fstab
+
+     - name: Listando fstab
+       shell: cat /etc/fstab
